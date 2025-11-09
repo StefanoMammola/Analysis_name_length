@@ -351,3 +351,11 @@ dev.off()
 #               control=glmmTMBControl(optimizer=optim,
 #                                      optArgs=list(method="BFGS")))
 # summary(m5)
+
+# formula_m6 <- as.formula("wiki01 ~ year + Readability + (1 | phylum / class / order)")
+# 
+# m6 <- glmmTMB(formula_m6, data = db,
+#               family = binomial,
+#               control=glmmTMBControl(optimizer=optim,
+#                                      optArgs=list(method="BFGS")))
+# summary(m6)
