@@ -36,7 +36,6 @@ latin.readability <- function(name) {
   return(c(Length = name_length, Clusters = consonant_clusters, Uncommon = uncommon_letters, Readability = readability))
 }
 
-
 # Load data ---------------------------------------------------------------
 
 db2  <- read.csv(file = "Data/full_data.csv", sep = ',', header = TRUE, as.is = FALSE)
@@ -93,6 +92,7 @@ m1 <- glmmTMB(formula_m1, data = db,
                                      optArgs=list(method="BFGS")))
 
 summary(m1)
+performance::check_zeroinflation(m1)
 # performance::check_model(m1)
 
 # Model prediction
@@ -155,6 +155,7 @@ m2 <- glmmTMB(formula_m2, data = db,
                                      optArgs=list(method="BFGS")))
 
 summary(m2)
+performance::check_zeroinflation(m2)
 # performance::check_model(m2)
 
 # Model prediction
@@ -218,6 +219,7 @@ m3 <- glmmTMB(formula_m3, data = db,
                                      optArgs=list(method="BFGS")))
 
 summary(m3)
+performance::check_zeroinflation(m3)
 # performance::check_model(m3)
 
 # Model prediction
@@ -280,6 +282,7 @@ m4 <- glmmTMB(formula_m4, data = db,
                                      optArgs=list(method="BFGS")))
 
 summary(m4)
+performance::check_zeroinflation(m4)
 # performance::check_model(m4)
 
 # Model prediction
@@ -338,3 +341,13 @@ ggpubr::ggarrange(plot_1,plot_2,plot_3,plot_4,
 dev.off()
 
 
+# db$wiki01 <- ifelse(db$wiki>0, 1, 0)
+# table(db$wiki01)
+# 
+# formula_m5 <- as.formula("wiki01 ~ year + Length + (1 | phylum / class / order)")
+# 
+# m5 <- glmmTMB(formula_m5, data = db, 
+#               family = binomial,
+#               control=glmmTMBControl(optimizer=optim,
+#                                      optArgs=list(method="BFGS")))
+# summary(m5)
