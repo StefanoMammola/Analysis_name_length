@@ -435,10 +435,9 @@ model.formula.db3 <- as.formula(paste0("Readability ~",
                                        "+",
                                        random))
 
-M1 <- glmmTMB::glmmTMB(model.formula.db3,
-                       family = gaussian, 
+M1 <- lme4::lmer(model.formula.db3,
                        data = db3)
 
 # Model validation
 summary(M1)
-
+performance::check_model(M1)
