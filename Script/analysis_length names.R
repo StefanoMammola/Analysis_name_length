@@ -359,3 +359,86 @@ dev.off()
 #               control=glmmTMBControl(optimizer=optim,
 #                                      optArgs=list(method="BFGS")))
 # summary(m6)
+
+# Data transformation -----------------------------------------------------
+
+# Balancing levels IUCN
+db2$IUCN_rec <- db2$IUCN
+
+levels(db2$IUCN_rec) <- c("Endangered", "Unknown", "Endangered", "Endangered", "Least concern","Unknown","Least concern","Endangered")
+table(db2$IUCN_rec)
+
+db2$IUCN_rec <- relevel(db2$IUCN_rec, "Unknown") #setting baseline
+
+# Balancing levels Domain
+db2$domain_rec <- db2$domain
+
+levels(db2$domain_rec) <- c("freshwater","multiple","multiple","multiple",
+                           "marine", "multiple", "terrestrial", "multiple", "terrestrial")
+
+db2$domain_rec <- relevel(db2$domain_rec, "multiple") #setting baseline
+
+table(db2$domain_rec)
+
+# Homogenize distribution
+db2 <- db2 %>% 
+  dplyr::mutate(log_uniqueness_family = log(uniqueness_family+1),
+                log_uniqueness_genus = log(uniqueness_genus+1),
+                log_range_size = log(range_size+1),
+                log_size_avg = log(size_avg+1),
+                log_distance_hu = log(mean_divergence_time_Mya+1))
+
+db2 <- db2 %>% 
+  dplyr::mutate(scaled_uniqueness_family = scale(log_uniqueness_family, center = TRUE, scale = TRUE),
+                scaled_log_distance_human = scale(log_distance_hu, center = TRUE, scale = TRUE),
+                scaled_range_size = scale(log_range_size, center = TRUE, scale = TRUE),
+                scaled_size = scale(log_size_avg, center = TRUE, scale = TRUE))
+
+db3 <- data.frame(db,
+            db2 |> dplyr::select(biogeography,
+            scaled_size,
+            colorful,
+            color_blu,
+            color_red,
+            scaled_range_size,
+            domain_rec,
+            IUCN_rec,
+            scaled_uniqueness_family,
+            common_name,
+            human_use,
+            harmful_to_human,
+            scaled_log_distance_human))  
+
+random <- "(1 | phylum/class/order) + (1 | biogeography)"
+
+colnames(db3)
+
+#formula
+model.formula.db3 <- as.formula(paste0("Length ~",
+                                       paste(colnames(db3)[16:ncol(db3)], collapse = " + "),
+                                       "+",
+                                       random))
+
+M1 <- glmmTMB::glmmTMB(model.formula.db3,
+                       family = poisson, 
+                       data = db3)
+
+# Model validation
+performance::check_overdispersion(M1) #Model is overdispersed
+performance::check_model(M1)
+summary(M1)
+
+
+#formula
+model.formula.db3 <- as.formula(paste0("Readability ~",
+                                       paste(colnames(db3)[16:ncol(db3)], collapse = " + "),
+                                       "+",
+                                       random))
+
+M1 <- glmmTMB::glmmTMB(model.formula.db3,
+                       family = gaussian, 
+                       data = db3)
+
+# Model validation
+summary(M1)
+
