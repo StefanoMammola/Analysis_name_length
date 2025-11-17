@@ -73,7 +73,10 @@ m0 <- glm(Readability ~ Length, family = "poisson", data = db)
 performance::check_overdispersion(m0)
 summary(m0)
 
-db$resid_readability <- residuals(m0, type = "pearson")
+m0 <- lm(Readability ~ Length, data = db)
+summary(m0)
+
+db$resid_readability <- residuals(m0, type = "response")
 
 # Modelling ---------------------------------------------------------------
 
@@ -147,6 +150,7 @@ label_text <- glue::glue(
 formula_m2 <- as.formula("citations ~ year + resid_readability + (1 | phylum / class / order)")
 
 m2 <- lme4::lmer(formula_m2, data = db)
+parameters::parameters(m2)
 
 # m2 <- glmmTMB(formula_m2, data = db, 
 #               family = poisson,
@@ -167,8 +171,8 @@ performance::check_zeroinflation(m2)
 # Model prediction
 newdat <- data.frame(
   Readability = seq(min(db$Readability, na.rm = TRUE),
-               max(db$Readability, na.rm = TRUE),
-               length.out = 100),
+                    max(db$Readability, na.rm = TRUE),
+                    length.out = 100),
   year   = mean(db$year, na.rm = TRUE),   # year effects averaged
   class = NA, order = NA     # random effects averaged
 )
@@ -273,7 +277,10 @@ label_text3 <- glue::glue(
 # Wiki model with Readability
 ########################
 
-formula_m4 <- as.formula("wiki ~ year + Readability + (1 | phylum / class / order)")
+formula_m4 <- as.formula("wiki ~ year + resid_readability + (1 | phylum / class / order)")
+
+m4 <- lme4::lmer(formula_m4, data = db)
+parameters::parameters(m4)
 
 # m4 <- glmmTMB(formula_m4, data = db, 
 #               family = poisson,
@@ -282,20 +289,20 @@ formula_m4 <- as.formula("wiki ~ year + Readability + (1 | phylum / class / orde
 # 
 # performance::check_overdispersion(m4)
 
-m4 <- glmmTMB(formula_m4, data = db, 
-              family = nbinom2,
-              control=glmmTMBControl(optimizer=optim,
-                                     optArgs=list(method="BFGS")))
-
-summary(m4)
-performance::check_zeroinflation(m4)
+# m4 <- glmmTMB(formula_m4, data = db, 
+#               family = nbinom2,
+#               control=glmmTMBControl(optimizer=optim,
+#                                      optArgs=list(method="BFGS")))
+# 
+# summary(m4)
+# performance::check_zeroinflation(m4)
 # performance::check_model(m4)
 
 # Model prediction
 newdat <- data.frame(
-  Readability = seq(min(db$Readability, na.rm = TRUE),
-               max(db$Readability, na.rm = TRUE),
-               length.out = 100),
+  resid_readability = seq(min(db$resid_readability, na.rm = TRUE),
+               max(db$resid_readability, na.rm = TRUE),
+               length.out = 2),
   year   = mean(db$year, na.rm = TRUE),   # year effects averaged
   phylum = NA, class = NA, order = NA     # random effects averaged
 )
@@ -307,8 +314,10 @@ newdat$lcl <- newdat$fit - 1.96*newdat$se
 newdat$ucl <- newdat$fit + 1.96*newdat$se
 
 # Extract slope and p-value for Length
-slope <- summary(m4)$coefficients$cond[3,1]
-pval  <- summary(m4)$coefficients$cond[3,4]
+par_4 <- parameters::parameters(m4) |> data.frame()
+
+slope <- par_4[3,2]
+pval  <- par_4[3,9]
 rsq <- MuMIn::r.squaredGLMM(m4)[2]  # R² (conditional = fixed + random effects)
 
 label_text4 <- glue::glue(
@@ -318,10 +327,10 @@ label_text4 <- glue::glue(
 )
 
 (plot_4 <- ggplot() +
-    geom_point(data=db, aes(Readability, wiki), alpha=0.2) +
-    geom_line(data=newdat, aes(Readability, fit), color="blue", size=1.2) +
-    geom_ribbon(data=newdat, aes(Readability, ymin=lcl, ymax=ucl), alpha=0.2) +
-    scale_y_continuous(trans = scales::pseudo_log_trans(), 
+    geom_point(data=db, aes(resid_readability, wiki), alpha=0.2) +
+    geom_line(data=newdat, aes(resid_readability, fit), color="blue", size=1.2) +
+    geom_ribbon(data=newdat, aes(resid_readability, ymin=lcl, ymax=ucl), alpha=0.2) +
+    scale_y_continuous(trans = scales::pseudo_log_trans(),
                        breaks = c(0, 10, 100, 10000, 100000, 100000000))+
     annotate("text",
              x = Inf, y = Inf,
