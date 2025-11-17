@@ -31,7 +31,7 @@ latin.readability <- function(name) {
   consonant_clusters <- sum(gregexpr("[bcdfghjklmnpqrstvwxyz]{2,}", name)[[1]] > 0) # Count consonant clusters
   uncommon_letters <- sum(strsplit(name, NULL)[[1]] %in% c("j", "k", "x", "y", "z")) # Count uncommon letters
   
-  readability <- 0.5 * name_length + 2 * consonant_clusters + uncommon_letters
+  readability <- 2 * consonant_clusters + uncommon_letters
   
   return(c(Length = name_length, Clusters = consonant_clusters, Uncommon = uncommon_letters, Readability = readability))
 }
@@ -65,11 +65,9 @@ db <- data.frame(kingdom = db2$kingdom,
                  citations = db2$Total_wos, 
                  wiki = db2$total_wiki_pgviews)
 
-db$Readability <- db$Readability*10 #to get read of decimals
-
 # Data exploration --------------------------------------------------------
 
-GGally::ggpairs(data = results)
+GGally::ggpairs(data = db, columns = c("Length", "Readability"))
 
 # Modelling ---------------------------------------------------------------
 
@@ -111,8 +109,8 @@ newdat$lcl <- newdat$fit - 1.96*newdat$se
 newdat$ucl <- newdat$fit + 1.96*newdat$se
 
 # Extract slope and p-value for Length
-slope <- tidy(m1, effects = "fixed")$estimate[tidy_m1$term == "Length"]
-pval  <- tidy(m1, effects = "fixed")$p.value[tidy_m1$term == "Length"]
+slope <- summary(m1)$coefficients$cond[3,1]
+pval  <- summary(m1)$coefficients$cond[3,4]
 rsq <- MuMIn::r.squaredGLMM(m1)[2]  # R² (conditional = fixed + random effects)
 
 label_text <- glue::glue(
@@ -174,8 +172,8 @@ newdat$lcl <- newdat$fit - 1.96*newdat$se
 newdat$ucl <- newdat$fit + 1.96*newdat$se
 
 # Extract slope and p-value for Length
-slope <- tidy(m2, effects = "fixed")$estimate[tidy_m1$term == "Length"]
-pval  <- tidy(m2, effects = "fixed")$p.value[tidy_m1$term == "Length"]
+slope <- summary(m2)$coefficients$cond[3,1]
+pval  <- summary(m1)$coefficients$cond[3,4]
 rsq <- MuMIn::r.squaredGLMM(m2)[2]  # R² (conditional = fixed + random effects)
 
 label_text2 <- glue::glue(
@@ -238,8 +236,8 @@ newdat$lcl <- newdat$fit - 1.96*newdat$se
 newdat$ucl <- newdat$fit + 1.96*newdat$se
 
 # Extract slope and p-value for Length
-slope <- tidy(m3, effects = "fixed")$estimate[tidy_m1$term == "Length"]
-pval  <- tidy(m3, effects = "fixed")$p.value[tidy_m1$term == "Length"]
+slope <- summary(m3)$coefficients$cond[3,1]
+pval  <- summary(m3)$coefficients$cond[3,4]
 rsq <- MuMIn::r.squaredGLMM(m3)[2]  # R² (conditional = fixed + random effects)
 
 label_text3 <- glue::glue(
@@ -301,8 +299,8 @@ newdat$lcl <- newdat$fit - 1.96*newdat$se
 newdat$ucl <- newdat$fit + 1.96*newdat$se
 
 # Extract slope and p-value for Length
-slope <- tidy(m4, effects = "fixed")$estimate[tidy_m1$term == "Length"]
-pval  <- tidy(m4, effects = "fixed")$p.value[tidy_m1$term == "Length"]
+slope <- summary(m4)$coefficients$cond[3,1]
+pval  <- summary(m4)$coefficients$cond[3,4]
 rsq <- MuMIn::r.squaredGLMM(m4)[2]  # R² (conditional = fixed + random effects)
 
 label_text4 <- glue::glue(
