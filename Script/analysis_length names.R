@@ -69,6 +69,12 @@ db <- data.frame(kingdom = db2$kingdom,
 
 GGally::ggpairs(data = db, columns = c("Length", "Readability"))
 
+m0 <- glm(Readability ~ Length, family = "poisson", data = db)
+performance::check_overdispersion(m0)
+summary(m0)
+
+db$resid_readability <- residuals(m0, type = "pearson")
+
 # Modelling ---------------------------------------------------------------
 
 ########################
@@ -121,7 +127,7 @@ label_text <- glue::glue(
 
 (plot_1 <- ggplot() +
   geom_point(data=db, aes(Length, citations), alpha=0.2) +
-  geom_line(data=newdat, aes(Length, fit), color="blue", size=1.2) +
+  geom_line(data=newdat, aes(Length, fit), color="blue", linewidth = 1.2) +
   geom_ribbon(data=newdat, aes(Length, ymin=lcl, ymax=ucl), alpha=0.2) +
   scale_y_continuous(trans = scales::pseudo_log_trans(), 
                      breaks = c(0, 1, 10, 100, 1000, 10000))+
@@ -138,7 +144,9 @@ label_text <- glue::glue(
 # Citation model with Readability
 ########################
 
-formula_m2 <- as.formula("citations ~ year + Readability + (1 | phylum / class / order)")
+formula_m2 <- as.formula("citations ~ year + resid_readability + (1 | phylum / class / order)")
+
+m2 <- lme4::lmer(formula_m2, data = db)
 
 # m2 <- glmmTMB(formula_m2, data = db, 
 #               family = poisson,
