@@ -81,7 +81,7 @@ db$resid_readability <- residuals(m0, type = "response")
 # Citation model with length
 ########################
 
-formula_m1 <- as.formula("citations ~ year + Length + (1 | phylum / class / order)")
+formula_m1 <- as.formula("citations ~ year + Length + resid_readability + (1 | phylum / class / order)")
 
 # m1 <- glmmTMB(formula_m1, data = db, 
 #               family = poisson,
@@ -97,6 +97,7 @@ m1 <- glmmTMB(formula_m1, data = db,
 
 summary(m1)
 performance::check_zeroinflation(m1)
+performance::check_collinearity(m1)
 # performance::check_model(m1)
 
 # Model prediction
@@ -104,6 +105,7 @@ newdat <- data.frame(
   Length = seq(min(db$Length, na.rm = TRUE),
                max(db$Length, na.rm = TRUE),
                length.out = 100),
+  resid_readability = mean(db$resid_readability, na.rm = TRUE), #readability effect is averaged
   year   = mean(db$year, na.rm = TRUE),   # year effects averaged
   phylum = NA, class = NA, order = NA     # random effects averaged
 )
@@ -140,70 +142,54 @@ label_text <- glue::glue(
        y = "Citations (log-scaled axis)")+
     theme_minimal(base_size = 12))
 
-########################
-# Citation model with Readability
-########################
-
-formula_m2 <- as.formula("citations ~ year + resid_readability + (1 | phylum)")
-
-m2 <- lme4::lmer(formula_m2, data = db)
-parameters::parameters(m2)
-performance::check_model(m2)
+# plot readability
 
 # Model prediction
 newdat <- data.frame(
   resid_readability = seq(min(db$resid_readability, na.rm = TRUE),
-                    max(db$resid_readability, na.rm = TRUE),
-                    length.out = 100),
+                          max(db$resid_readability, na.rm = TRUE),
+                          length.out = 2),
+  Length   = mean(db$Length, na.rm = TRUE),   # Length effects averaged
   year   = mean(db$year, na.rm = TRUE),   # year effects averaged
-  class = NA, order = NA     # random effects averaged
+  phylum = NA, class = NA, order = NA     # random effects averaged
 )
 
-pred <- predict(m2, newdat, type = "response", se.fit = TRUE, re.form = NA, allow.new.levels=TRUE)
+pred <- predict(m1, newdat, type = "response", se.fit = TRUE, re.form = NA, allow.new.levels=TRUE)
 newdat$fit <- pred$fit
 newdat$se  <- pred$se.fit
 newdat$lcl <- newdat$fit - 1.96*newdat$se
 newdat$ucl <- newdat$fit + 1.96*newdat$se
 
 # Extract slope and p-value for Length
-slope <- summary(m2)$coefficients$cond[3,1]
-pval  <- summary(m1)$coefficients$cond[3,4]
-rsq <- MuMIn::r.squaredGLMM(m2)[2]  # R² (conditional = fixed + random effects)
+slope <- summary(m1)$coefficients$cond[4,1]
+pval  <- summary(m1)$coefficients$cond[4,4]
 
-label_text2 <- glue::glue(
+label_text4 <- glue::glue(
   "Slope = {round(slope, 3)}\n",
   "p = {format.pval(pval, digits = 3)}\n",
   "R² = {round(rsq, 3)}"
 )
 
 (plot_2 <- ggplot() +
-    geom_point(data=db, aes(resid_readability, citations), alpha=0.2) +
+    geom_point(data=db, aes(resid_readability, wiki), alpha=0.2) +
     geom_line(data=newdat, aes(resid_readability, fit), color="blue", size=1.2) +
     geom_ribbon(data=newdat, aes(resid_readability, ymin=lcl, ymax=ucl), alpha=0.2) +
-    scale_y_continuous(trans = scales::pseudo_log_trans(), 
-                       breaks = c(0, 1, 10, 100, 1000, 10000))+
-    #scale_y_continuous(trans="log10") +
+    scale_y_continuous(trans = scales::pseudo_log_trans(),
+                       breaks = c(0, 10, 100, 10000, 100000, 100000000))+
     annotate("text",
              x = Inf, y = Inf,
-             label = label_text2,
+             label = label_text4,
              hjust = 1.1, vjust = 1.1,
              size = 4) +
-    labs(x = "Species name readability", 
-         y = "Citations (log-scaled axis)")+
+    labs(x = "Species name readability (residuals)", 
+         y = "Wikipedia views (log-scaled axis)")+
     theme_minimal(base_size = 12))
 
 ########################
 # Wiki model with Length
 ########################
 
-formula_m3 <- as.formula("wiki ~ year + Length + (1 | phylum / class / order)")
-
-# m3 <- glmmTMB(formula_m3, data = db, 
-#               family = poisson,
-#               control=glmmTMBControl(optimizer=optim,
-#                                      optArgs=list(method="BFGS")))
-# 
-# performance::check_overdispersion(m3)
+formula_m3 <- as.formula("wiki ~ year + Length + resid_readability + (1 | phylum / class / order)")
 
 m3 <- glmmTMB(formula_m3, data = db, 
               family = nbinom2,
@@ -212,6 +198,7 @@ m3 <- glmmTMB(formula_m3, data = db,
 
 summary(m3)
 performance::check_zeroinflation(m3)
+performance::check_collinearity(m3)
 # performance::check_model(m3)
 
 # Model prediction
@@ -219,6 +206,7 @@ newdat <- data.frame(
   Length = seq(min(db$Length, na.rm = TRUE),
                max(db$Length, na.rm = TRUE),
                length.out = 100),
+  resid_readability = mean(db$resid_readability, na.rm = TRUE), # readability effect averaged
   year   = mean(db$year, na.rm = TRUE),   # year effects averaged
   phylum = NA, class = NA, order = NA     # random effects averaged
 )
@@ -255,36 +243,27 @@ label_text3 <- glue::glue(
          y = "Wikipedia views (log-scaled axis)")+
     theme_minimal(base_size = 12))
 
-########################
-# Wiki model with Readability
-########################
-
-formula_m4 <- as.formula("wiki ~ year + resid_readability + (1 | phylum)")
-
-m4 <- lme4::lmer(formula_m4, data = db)
-parameters::parameters(m4)
+# plot with Readability
 
 # Model prediction
 newdat <- data.frame(
   resid_readability = seq(min(db$resid_readability, na.rm = TRUE),
-               max(db$resid_readability, na.rm = TRUE),
-               length.out = 2),
+                          max(db$resid_readability, na.rm = TRUE),
+                          length.out = 2),
+  Length   = mean(db$Length, na.rm = TRUE),   # Length effects averaged
   year   = mean(db$year, na.rm = TRUE),   # year effects averaged
   phylum = NA, class = NA, order = NA     # random effects averaged
 )
 
-pred <- predict(m4, newdat, type = "response", se.fit = TRUE, re.form = NA, allow.new.levels=TRUE)
+pred <- predict(m3, newdat, type = "response", se.fit = TRUE, re.form = NA, allow.new.levels=TRUE)
 newdat$fit <- pred$fit
 newdat$se  <- pred$se.fit
 newdat$lcl <- newdat$fit - 1.96*newdat$se
 newdat$ucl <- newdat$fit + 1.96*newdat$se
 
 # Extract slope and p-value for Length
-par_4 <- parameters::parameters(m4) |> data.frame()
-
-slope <- par_4[3,2]
-pval  <- par_4[3,9]
-rsq <- MuMIn::r.squaredGLMM(m4)[2]  # R² (conditional = fixed + random effects)
+slope <- summary(m3)$coefficients$cond[4,1]
+pval  <- summary(m3)$coefficients$cond[4,4]
 
 label_text4 <- glue::glue(
   "Slope = {round(slope, 3)}\n",
