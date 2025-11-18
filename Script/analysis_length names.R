@@ -75,6 +75,20 @@ summary(m0)
 
 db$resid_readability <- residuals(m0, type = "response")
 
+# Figure S1 ---------------------------------------------------------------
+
+(Fig_S1A <- ggplot(data=db, aes(Length)) +
+  geom_bar(fill = "grey20")+ 
+  labs(x = "Species name length [number of characters]", 
+       y = "Count")+
+  theme_minimal(base_size = 12))
+
+(Fig_S1B <- ggplot(data=db, aes(resid_readability)) +
+    geom_bar(fill = "grey20")+ 
+    labs(x = "Species name readability [residuals]", 
+         y = "")+
+    theme_minimal(base_size = 12))
+
 # Modelling ---------------------------------------------------------------
 
 ########################
