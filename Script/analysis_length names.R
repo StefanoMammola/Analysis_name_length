@@ -138,7 +138,7 @@ label_text <- glue::glue(
              label = label_text,
              hjust = 1.1, vjust = 1.1,
              size = 4) +
-  labs(x = "Species name length [number of characters]", 
+  labs(x = "", 
        y = "Citations (log-scaled axis)")+
     theme_minimal(base_size = 12))
 
@@ -166,12 +166,11 @@ pval  <- summary(m1)$coefficients$cond[4,4]
 
 label_text4 <- glue::glue(
   "Slope = {round(slope, 3)}\n",
-  "p = {format.pval(pval, digits = 3)}\n",
-  "R² = {round(rsq, 3)}"
+  "p = {format.pval(pval, digits = 3)}\n"
 )
 
 (plot_2 <- ggplot() +
-    geom_point(data=db, aes(resid_readability, wiki), alpha=0.2) +
+    geom_point(data=db, aes(resid_readability, citations), alpha=0.2) +
     geom_line(data=newdat, aes(resid_readability, fit), color="blue", size=1.2) +
     geom_ribbon(data=newdat, aes(resid_readability, ymin=lcl, ymax=ucl), alpha=0.2) +
     scale_y_continuous(trans = scales::pseudo_log_trans(),
@@ -181,8 +180,8 @@ label_text4 <- glue::glue(
              label = label_text4,
              hjust = 1.1, vjust = 1.1,
              size = 4) +
-    labs(x = "Species name readability (residuals)", 
-         y = "Wikipedia views (log-scaled axis)")+
+    labs(x = "", 
+         y = "")+
     theme_minimal(base_size = 12))
 
 ########################
@@ -267,8 +266,7 @@ pval  <- summary(m3)$coefficients$cond[4,4]
 
 label_text4 <- glue::glue(
   "Slope = {round(slope, 3)}\n",
-  "p = {format.pval(pval, digits = 3)}\n",
-  "R² = {round(rsq, 3)}"
+  "p = {format.pval(pval, digits = 3)}\n"
 )
 
 (plot_4 <- ggplot() +
@@ -283,7 +281,7 @@ label_text4 <- glue::glue(
              hjust = 1.1, vjust = 1.1,
              size = 4) +
     labs(x = "Species name readability", 
-         y = "Wikipedia views (log-scaled axis)")+
+         y = "")+
     theme_minimal(base_size = 12))
 
 # Final plot --------------------------------------------------------------
