@@ -79,26 +79,26 @@ str(db)
 # Figure S1 ---------------------------------------------------------------
 
 (Fig_S1A <- ggplot(data=db, aes(Length)) +
-   geom_histogram(fill = "grey20", bins = 25)+ 
+   geom_histogram(fill = "grey5", bins = 25)+ 
   labs(x = "Species name length [number of characters]", 
        y = "Count")+
   theme_minimal(base_size = 12))
 
 (Fig_S1B <- ggplot(data=db, aes(x = resid_readability)) +
-    geom_histogram(fill = "grey20", bins = 25)+ 
-    labs(x = "Species name readability", 
+    geom_histogram(fill = "grey5", bins = 25)+ 
+    labs(x = "Reading difficulty [residuals]", 
          y = "")+
     theme_minimal(base_size = 12))
 
 
-pdf(file = "Figures/Figure_S1.pdf", width = 8, height = 8)
+pdf(file = "Figures/Figure_S1.pdf", width = 8, height = 4)
 
 ggpubr::ggarrange(Fig_S1A,Fig_S1B,
                   common.legend = FALSE,
                   hjust = 0,
                   #align = "h",
-                  labels = c("A", "B", "C", "D"),
-                  ncol=2, nrow=2) 
+                  labels = c("A", "B"),
+                  ncol=2, nrow=1) 
 
 dev.off()
 
@@ -127,6 +127,7 @@ performance::check_zeroinflation(m1)
 performance::check_collinearity(m1)
 # performance::check_model(m1)
 
+
 # Model prediction
 newdat <- data.frame(
   Length = seq(min(db$Length, na.rm = TRUE),
@@ -136,6 +137,8 @@ newdat <- data.frame(
   year   = mean(db$year, na.rm = TRUE),   # year effects averaged
   phylum = NA, class = NA, order = NA     # random effects averaged
 )
+
+#length = 8, 3.7 citations ; length = 33 ; 1.25
 
 pred <- predict(m1, newdat, type = "response", se.fit = TRUE, re.form = NA, allow.new.levels=TRUE)
 newdat$fit <- pred$fit
@@ -175,7 +178,7 @@ label_text <- glue::glue(
 newdat <- data.frame(
   resid_readability = seq(min(db$resid_readability, na.rm = TRUE),
                           max(db$resid_readability, na.rm = TRUE),
-                          length.out = 2),
+                          length.out = 100),
   Length   = mean(db$Length, na.rm = TRUE),   # Length effects averaged
   year   = mean(db$year, na.rm = TRUE),   # year effects averaged
   phylum = NA, class = NA, order = NA     # random effects averaged
@@ -275,7 +278,7 @@ label_text3 <- glue::glue(
 newdat <- data.frame(
   resid_readability = seq(min(db$resid_readability, na.rm = TRUE),
                           max(db$resid_readability, na.rm = TRUE),
-                          length.out = 2),
+                          length.out = 100),
   Length   = mean(db$Length, na.rm = TRUE),   # Length effects averaged
   year   = mean(db$year, na.rm = TRUE),   # year effects averaged
   phylum = NA, class = NA, order = NA     # random effects averaged
@@ -307,7 +310,7 @@ label_text4 <- glue::glue(
              label = label_text4,
              hjust = 1.1, vjust = 1.1,
              size = 4) +
-    labs(x = "Species name readability", 
+    labs(x = "Reading difficulty", 
          y = "")+
     theme_minimal(base_size = 12))
 
@@ -414,7 +417,7 @@ summary(M1)
 
 
 #formula
-model.formula.db3 <- as.formula(paste0("Readability ~",
+model.formula.db3 <- as.formula(paste0("resid_readability ~",
                                        paste(colnames(db3)[16:ncol(db3)], collapse = " + "),
                                        "+",
                                        random))
@@ -423,5 +426,5 @@ M1 <- lme4::lmer(model.formula.db3,
                        data = db3)
 
 # Model validation
-summary(M1)
+parameters::parameters(M1)
 performance::check_model(M1)
