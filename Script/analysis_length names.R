@@ -144,20 +144,11 @@ label_text <- glue::glue(
 # Citation model with Readability
 ########################
 
-formula_m2 <- as.formula("citations ~ year + resid_readability + (1 | phylum / class / order)")
+formula_m2 <- as.formula("citations ~ year + resid_readability + (1 | phylum)")
 
-# m2 <- glmmTMB(formula_m2, data = db, 
-#               family = poisson,
-#               control=glmmTMBControl(optimizer=optim,
-#                                      optArgs=list(method="BFGS")))
-# 
-# performance::check_overdispersion(m2)
-
-m2 <- glmmTMB(formula_m2, data = db, 
-              family = gaussian,
-              control=glmmTMBControl(optimizer=optim,
-                                     optArgs=list(method="BFGS")))
-summary(m2)
+m2 <- lme4::lmer(formula_m2, data = db)
+parameters::parameters(m2)
+performance::check_model(m2)
 
 # Model prediction
 newdat <- data.frame(
@@ -321,7 +312,6 @@ label_text4 <- glue::glue(
 pdf(file = "Figures/Figure_1.pdf", width = 8, height = 8)
 
 ggpubr::ggarrange(plot_1,plot_2,plot_3,plot_4,
-                 
                   common.legend = FALSE,
                   hjust = 0,
                   #align = "h",
