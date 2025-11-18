@@ -75,19 +75,32 @@ summary(m0)
 
 db$resid_readability <- residuals(m0, type = "response")
 
+str(db)
 # Figure S1 ---------------------------------------------------------------
 
 (Fig_S1A <- ggplot(data=db, aes(Length)) +
-  geom_bar(fill = "grey20")+ 
+   geom_histogram(fill = "grey20", bins = 25)+ 
   labs(x = "Species name length [number of characters]", 
        y = "Count")+
   theme_minimal(base_size = 12))
 
-(Fig_S1B <- ggplot(data=db, aes(resid_readability)) +
-    geom_bar(fill = "grey20")+ 
-    labs(x = "Species name readability [residuals]", 
+(Fig_S1B <- ggplot(data=db, aes(x = resid_readability)) +
+    geom_histogram(fill = "grey20", bins = 25)+ 
+    labs(x = "Species name readability", 
          y = "")+
     theme_minimal(base_size = 12))
+
+
+pdf(file = "Figures/Figure_S1.pdf", width = 8, height = 8)
+
+ggpubr::ggarrange(Fig_S1A,Fig_S1B,
+                  common.legend = FALSE,
+                  hjust = 0,
+                  #align = "h",
+                  labels = c("A", "B", "C", "D"),
+                  ncol=2, nrow=2) 
+
+dev.off()
 
 # Modelling ---------------------------------------------------------------
 
