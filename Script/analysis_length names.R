@@ -138,8 +138,6 @@ newdat <- data.frame(
   phylum = NA, class = NA, order = NA     # random effects averaged
 )
 
-#length = 8, 3.7 citations ; length = 33 ; 1.25
-
 pred <- predict(m1, newdat, type = "response", se.fit = TRUE, re.form = NA, allow.new.levels=TRUE)
 newdat$fit <- pred$fit
 newdat$se  <- pred$se.fit
@@ -160,7 +158,7 @@ label_text <- glue::glue(
 (plot_1 <- ggplot() +
   geom_point(data=db, aes(Length, citations), alpha=0.2) +
   geom_line(data=newdat, aes(Length, fit), color="blue", linewidth = 1.2) +
-  geom_ribbon(data=newdat, aes(Length, ymin=lcl, ymax=ucl), alpha=0.2) +
+  geom_ribbon(data=newdat, aes(Length, ymin=lcl, ymax=ucl), fill = "blue", alpha=0.2) +
   scale_y_continuous(trans = scales::pseudo_log_trans(), 
                      breaks = c(0, 1, 10, 100, 1000, 10000))+
     annotate("text",
@@ -201,9 +199,9 @@ label_text4 <- glue::glue(
 
 (plot_2 <- ggplot() +
     geom_point(data=db, aes(resid_readability, citations), alpha=0.2) +
-    geom_line(data=newdat, aes(resid_readability, fit), color="blue", size=1.2) +
-    geom_ribbon(data=newdat, aes(resid_readability, ymin=lcl, ymax=ucl), alpha=0.2) +
-    scale_y_continuous(trans = scales::pseudo_log_trans(),
+    geom_line(data=newdat, aes(resid_readability, fit), color="blue", linewidth=1.2) +
+    geom_ribbon(data=newdat, aes(resid_readability, ymin=lcl, ymax=ucl),  fill = "blue", alpha=0.2) +
+    scale_y_continuous(trans = scales::pseudo_log_trans(), 
                        breaks = c(0, 10, 100, 10000, 100000, 100000000))+
     annotate("text",
              x = Inf, y = Inf,
@@ -259,8 +257,8 @@ label_text3 <- glue::glue(
 
 (plot_3 <- ggplot() +
     geom_point(data=db, aes(Length, wiki), alpha=0.2) +
-    geom_line(data=newdat, aes(Length, fit), color="blue", size=1.2) +
-    geom_ribbon(data=newdat, aes(Length, ymin=lcl, ymax=ucl), alpha=0.2) +
+    geom_line(data=newdat, aes(Length, fit), color="blue", linewidth = 1.2) +
+    geom_ribbon(data=newdat, aes(Length, ymin=lcl, ymax=ucl), fill = "blue", alpha=0.2) +
     scale_y_continuous(trans = scales::pseudo_log_trans(), 
                        breaks = c(0, 10, 100, 10000, 100000, 100000000))+
     annotate("text",
@@ -301,8 +299,8 @@ label_text4 <- glue::glue(
 
 (plot_4 <- ggplot() +
     geom_point(data=db, aes(resid_readability, wiki), alpha=0.2) +
-    geom_line(data=newdat, aes(resid_readability, fit), color="blue", size=1.2) +
-    geom_ribbon(data=newdat, aes(resid_readability, ymin=lcl, ymax=ucl), alpha=0.2) +
+    geom_line(data=newdat, aes(resid_readability, fit), color="blue", linewidth=1.2) +
+    geom_ribbon(data=newdat, aes(resid_readability, ymin=lcl, ymax=ucl),fill = "blue",  alpha=0.2) +
     scale_y_continuous(trans = scales::pseudo_log_trans(),
                        breaks = c(0, 10, 100, 10000, 100000, 100000000))+
     annotate("text",
@@ -316,7 +314,7 @@ label_text4 <- glue::glue(
 
 # Final plot --------------------------------------------------------------
 
-pdf(file = "Figures/Figure_1.pdf", width = 8, height = 8)
+pdf(file = "Figures/Figure_1.pdf", width = 9, height = 8)
 
 ggpubr::ggarrange(plot_1,plot_2,plot_3,plot_4,
                   common.legend = FALSE,
