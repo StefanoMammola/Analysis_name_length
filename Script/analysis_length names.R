@@ -1,6 +1,6 @@
 ###########################################################################
 
-# Species name length
+# The power of naming: shorter and simpler species names draw more attention
 
 ###########################################################################
 
@@ -8,7 +8,7 @@
 # 'R script to reproduce the analyses'
 ## ------------------------------------------------------------------------
 
-# Analysis performed with R (v. R 4.1.0) and R studio (v. 1.4.1103)
+# Analysis performed with R (v. R 4.4.1) and R studio (v. 2023.12.0+369)
 # Author: Stefano Mammola
 
 # load R packages ---------------------------------------------------------
