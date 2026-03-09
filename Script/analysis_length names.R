@@ -69,13 +69,24 @@ db <- data.frame(kingdom = db2$kingdom,
 
 GGally::ggpairs(data = db, columns = c("Length", "Readability"))
 
+cor.test(db$Readability,db$Length)
+
 m0 <- glm(Readability ~ Length, family = "poisson", data = db)
 performance::check_overdispersion(m0)
 summary(m0)
 
 db$resid_readability <- residuals(m0, type = "response")
 
-str(db)
+#
+db |>
+  dplyr::arrange(desc(resid_readability)) |>  
+  slice(1:3)
+
+db |>
+  dplyr::arrange(resid_readability) |>  
+  slice(1:3)
+
+
 # Figure S1 ---------------------------------------------------------------
 
 (Fig_S1A <- ggplot(data=db, aes(Length)) +
