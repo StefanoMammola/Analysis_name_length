@@ -17,7 +17,7 @@ pacman::p_load("dplyr",
                "glmmTMB",
                "tidyverse",
                "ggplot2",
-               "ggExtra",
+               #"ggExtra",
                "stringr",
                "glue",
                "MuMIn",
@@ -113,7 +113,6 @@ range(db$citations, na.rm = TRUE)
          y = "")+
     theme_minimal(base_size = 12))
 
-
 pdf(file = "Figures/Figure_S1.pdf", width = 8, height = 4)
 
 ggpubr::ggarrange(Fig_S1A,Fig_S1B,
@@ -190,7 +189,7 @@ label_text <- glue::glue(
              hjust = 1.1, vjust = 1.1,
              size = 4) +
   labs(x = "", 
-       y = "Citations (log-scaled axis)")+
+       y = "Literature mentions (log-scaled axis)")+
     theme_minimal(base_size = 12))
 
 # plot readability
@@ -235,13 +234,34 @@ label_text4 <- glue::glue(
          y = "")+
     theme_minimal(base_size = 12))
 
-(plot_2 <- ggExtra::ggMarginal(
-  plot_2,
-  type = "density",
-  margins = "y",
-  fill = "grey10",
-  alpha = 0.7
-))
+# (plot_2 <- ggExtra::ggMarginal(
+#   plot_2,
+#   type = "density",
+#   margins = "y",
+#   fill = "grey10",
+#   alpha = 0.7
+# ))
+
+p_density_plot2 <- ggplot(db, aes(y = citations)) +
+  
+  geom_point(
+    aes(x = 0, y = median(db$citations, na.rm = TRUE)),
+    color="blue"
+  ) +
+  
+  # annotate("text",
+  #          y = 0.4,
+  #          x = median(db$citations, na.rm = TRUE)+0.02,
+  #          label = "median",
+  #          hjust = 0,
+  #          color = "blue") +
+  
+  geom_density(color = NA, fill="grey10", alpha = 0.3) +
+  
+  scale_y_continuous(trans = scales::pseudo_log_trans(),
+                     breaks = c(0,1,10,100,1000,10000)) +
+  
+  theme_void()
 
 ########################
 # Wiki model with Length
@@ -345,19 +365,42 @@ label_text4 <- glue::glue(
          y = "")+
     theme_minimal(base_size = 12))
 
-(plot_4 <- ggExtra::ggMarginal(
-  plot_4,
-  type = "density",
-  margins = "y",
-  fill = "grey10",
-  alpha = 0.7
-))
+# (plot_4 <- ggExtra::ggMarginal(
+#   plot_4,
+#   type = "density",
+#   margins = "y",
+#   fill = "grey10",
+#   alpha = 0.7
+# ))
+
+p_density_plot4 <- ggplot(db, aes(y = wiki)) +
+  
+  geom_point(
+    aes(x = 0, y = median(db$wiki, na.rm = TRUE)),
+    color="blue"
+  ) +
+  
+  annotate("text",
+           x = 0.01,
+           y = median(db$wiki, na.rm = TRUE),
+           label = "median",
+           hjust = 0,
+           color = "blue") +
+  
+  geom_density(color = NA, fill="grey10", alpha=0.3) +
+  
+  scale_y_continuous(trans = scales::pseudo_log_trans(),
+                     breaks = c(0,1,10,100,1000,10000)) +
+
+  theme_void()
 
 # Final plot --------------------------------------------------------------
-
 pdf(file = "Figures/Figure_1.pdf", width = 9, height = 8)
 
-ggpubr::ggarrange(plot_1,plot_2,plot_3,plot_4,
+ggpubr::ggarrange(plot_1,
+                  plot_2 + p_density_plot2 + plot_layout(widths = c(4,1)) ,
+                  plot_3,
+                  plot_4 + p_density_plot4 + plot_layout(widths = c(4,1)),
                   common.legend = FALSE,
                   hjust = 0,
                   #align = "h",
@@ -365,7 +408,6 @@ ggpubr::ggarrange(plot_1,plot_2,plot_3,plot_4,
                   ncol=2, nrow=2) 
 
 dev.off()
-
 
 # db$wiki01 <- ifelse(db$wiki>0, 1, 0)
 # table(db$wiki01)
@@ -440,7 +482,7 @@ random <- "(1 | phylum/class/order) + (1 | biogeography)"
 colnames(db3)
 
 #formula
-model.formula.db3 <- as.formula(paste0("Length ~",
+model.formula.db3 <- as.formula(paste0("citations ~ year + Length + resid_readability +", 
                                        paste(colnames(db3)[16:ncol(db3)], collapse = " + "),
                                        "+",
                                        random))
@@ -451,19 +493,11 @@ M1 <- glmmTMB::glmmTMB(model.formula.db3,
 
 # Model validation
 performance::check_overdispersion(M1) #Model is overdispersed
-performance::check_model(M1)
+
+
+M2 <- glmmTMB(model.formula.db3, data = db3, 
+              family = nbinom2,
+              control=glmmTMBControl(optimizer=optim,
+                                     optArgs=list(method="BFGS")))
 summary(M1)
 
-
-#formula
-model.formula.db3 <- as.formula(paste0("resid_readability ~",
-                                       paste(colnames(db3)[16:ncol(db3)], collapse = " + "),
-                                       "+",
-                                       random))
-
-M1 <- lme4::lmer(model.formula.db3,
-                       data = db3)
-
-# Model validation
-parameters::parameters(M1)
-performance::check_model(M1)
