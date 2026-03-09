@@ -17,6 +17,7 @@ pacman::p_load("dplyr",
                "glmmTMB",
                "tidyverse",
                "ggplot2",
+               "ggExtra",
                "stringr",
                "glue",
                "MuMIn",
@@ -67,25 +68,36 @@ db <- data.frame(kingdom = db2$kingdom,
 
 # Data exploration --------------------------------------------------------
 
+# Correlation between length and readability
 GGally::ggpairs(data = db, columns = c("Length", "Readability"))
-
 cor.test(db$Readability,db$Length)
 
+# Extracting residuals of readability to correct for length effects
 m0 <- glm(Readability ~ Length, family = "poisson", data = db)
 performance::check_overdispersion(m0)
 summary(m0)
 
 db$resid_readability <- residuals(m0, type = "response")
 
-#
+# Most and least readable species
 db |>
-  dplyr::arrange(desc(resid_readability)) |>  
+  dplyr::arrange(desc(Readability)) |>  
   slice(1:3)
 
 db |>
-  dplyr::arrange(resid_readability) |>  
+  dplyr::arrange(Readability) |>  
   slice(1:3)
 
+# Summary stats for predictors
+range(db$year, na.rm = TRUE)
+
+median(db$wiki, na.rm = TRUE)
+sd(db$wiki, na.rm = TRUE)
+range(db$wiki, na.rm = TRUE)
+
+median(db$citations, na.rm = TRUE)
+sd(db$citations, na.rm = TRUE)
+range(db$citations, na.rm = TRUE)
 
 # Figure S1 ---------------------------------------------------------------
 
@@ -138,7 +150,6 @@ performance::check_zeroinflation(m1)
 performance::check_collinearity(m1)
 # performance::check_model(m1)
 
-
 # Model prediction
 newdat <- data.frame(
   Length = seq(min(db$Length, na.rm = TRUE),
@@ -170,7 +181,8 @@ label_text <- glue::glue(
   geom_point(data=db, aes(Length, citations), alpha=0.2) +
   geom_line(data=newdat, aes(Length, fit), color="blue", linewidth = 1.2) +
   geom_ribbon(data=newdat, aes(Length, ymin=lcl, ymax=ucl), fill = "blue", alpha=0.2) +
-  scale_y_continuous(trans = scales::pseudo_log_trans(), 
+    
+    scale_y_continuous(trans = scales::pseudo_log_trans(), 
                      breaks = c(0, 1, 10, 100, 1000, 10000))+
     annotate("text",
              x = Inf, y = Inf,
@@ -223,6 +235,14 @@ label_text4 <- glue::glue(
          y = "")+
     theme_minimal(base_size = 12))
 
+(plot_2 <- ggExtra::ggMarginal(
+  plot_2,
+  type = "density",
+  margins = "y",
+  fill = "grey10",
+  alpha = 0.7
+))
+
 ########################
 # Wiki model with Length
 ########################
@@ -272,6 +292,7 @@ label_text3 <- glue::glue(
     geom_ribbon(data=newdat, aes(Length, ymin=lcl, ymax=ucl), fill = "blue", alpha=0.2) +
     scale_y_continuous(trans = scales::pseudo_log_trans(), 
                        breaks = c(0, 10, 100, 10000, 100000, 100000000))+
+  
     annotate("text",
              x = Inf, y = Inf,
              label = label_text3,
@@ -314,6 +335,7 @@ label_text4 <- glue::glue(
     geom_ribbon(data=newdat, aes(resid_readability, ymin=lcl, ymax=ucl),fill = "blue",  alpha=0.2) +
     scale_y_continuous(trans = scales::pseudo_log_trans(),
                        breaks = c(0, 10, 100, 10000, 100000, 100000000))+
+    
     annotate("text",
              x = Inf, y = Inf,
              label = label_text4,
@@ -322,6 +344,14 @@ label_text4 <- glue::glue(
     labs(x = "Reading difficulty", 
          y = "")+
     theme_minimal(base_size = 12))
+
+(plot_4 <- ggExtra::ggMarginal(
+  plot_4,
+  type = "density",
+  margins = "y",
+  fill = "grey10",
+  alpha = 0.7
+))
 
 # Final plot --------------------------------------------------------------
 
