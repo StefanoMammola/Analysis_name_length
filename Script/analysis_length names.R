@@ -483,7 +483,7 @@ colnames(db3)
 
 #formula
 model.formula.db3 <- as.formula(paste0("citations ~ year + Length + resid_readability +", 
-                                       paste(colnames(db3)[16:ncol(db3)], collapse = " + "),
+                                       paste(colnames(db3)[17:ncol(db3)], collapse = " + "),
                                        "+",
                                        random))
 
@@ -494,10 +494,9 @@ M1 <- glmmTMB::glmmTMB(model.formula.db3,
 # Model validation
 performance::check_overdispersion(M1) #Model is overdispersed
 
-
 M2 <- glmmTMB(model.formula.db3, data = db3, 
               family = nbinom2,
               control=glmmTMBControl(optimizer=optim,
                                      optArgs=list(method="BFGS")))
-summary(M1)
+summary(M2)
 
